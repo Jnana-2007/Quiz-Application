@@ -1,0 +1,214 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const QuizApp());
+}
+
+class QuizApp extends StatelessWidget {
+  const QuizApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Interactive Quiz',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const QuizScreen(),
+    );
+  }
+}
+
+class QuizQuestion {
+  const QuizQuestion({
+    required this.question,
+    required this.options,
+    required this.answer,
+  });
+
+  final String question;
+  final List<String> options;
+  final String answer;
+}
+
+const List<QuizQuestion> questions = [
+  QuizQuestion(
+    question: 'Which language is used in Flutter?',
+    options: ['Java', 'Dart', 'Python', 'C'],
+    answer: 'Dart',
+  ),
+  QuizQuestion(
+    question: 'Which company developed Flutter?',
+    options: ['Google', 'Microsoft', 'Apple', 'Amazon'],
+    answer: 'Google',
+  ),
+  QuizQuestion(
+    question: 'Which widget is used to display text?',
+    options: ['Image', 'Container', 'Text', 'Row'],
+    answer: 'Text',
+  ),
+  QuizQuestion(
+    question: 'Which function is the starting point of Dart?',
+    options: ['start()', 'main()', 'run()', 'init()'],
+    answer: 'main()',
+  ),
+  QuizQuestion(
+    question: 'Which widget is used for user interaction?',
+    options: ['ElevatedButton', 'Container', 'Padding', 'Center'],
+    answer: 'ElevatedButton',
+  ),
+];
+
+class QuizScreen extends StatefulWidget {
+  const QuizScreen({super.key});
+
+  @override
+  State<QuizScreen> createState() => _QuizScreenState();
+}
+
+class _QuizScreenState extends State<QuizScreen> {
+  int currentQuestion = 0;
+  int score = 0;
+  String? selectedAnswer;
+  bool answered = false;
+
+  void submitAnswer() {
+    if (selectedAnswer == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select an answer!')),
+      );
+      return;
+    }
+
+    setState(() {
+      answered = true;
+      if (selectedAnswer == questions[currentQuestion].answer) {
+        score++;
+      }
+    });
+  }
+
+  void nextQuestion() {
+    setState(() {
+      currentQuestion++;
+      selectedAnswer = null;
+      answered = false;
+    });
+  }
+
+  void restartQuiz() {
+    setState(() {
+      currentQuestion = 0;
+      score = 0;
+      selectedAnswer = null;
+      answered = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (currentQuestion >= questions.length) {
+      return Scaffold(
+        backgroundColor: Colors.blue.shade50,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.emoji_events,
+                size: 100,
+                color: Colors.orange,
+              ),
+              const Text(
+                'Quiz Completed!',
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Your Score: $score / ${questions.length}',
+                style: const TextStyle(fontSize: 25),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: restartQuiz,
+                child: const Text('Restart Quiz'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final question = questions[currentQuestion];
+
+    return Scaffold(
+      backgroundColor: Colors.blue.shade50,
+      appBar: AppBar(
+        title: const Text('Interactive Quiz'),
+        centerTitle: true,
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Question ${currentQuestion + 1} of ${questions.length}',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  question.question,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ...question.options.map(
+              (option) => Card(
+                child: RadioListTile<String>(
+                  title: Text(option),
+                  value: option,
+                  groupValue: selectedAnswer,
+                  onChanged: answered
+                      ? null
+                      : (value) {
+                          setState(() {
+                            selectedAnswer = value;
+                          });
+                        },
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: answered ? nextQuestion : submitAnswer,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.all(15),
+              ),
+              child: Text(
+                answered ? 'Next Question' : 'Submit Answer',
+                style: const TextStyle(fontSize: 18),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Current Score: $score',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
